@@ -1,29 +1,28 @@
-import React from "react"
-import { Pagination } from "react-bootstrap"
-import { API_KEY, API_URL } from "../config"
-import { Preloader } from "./Preloader"
-import { GoodsList } from "./GoodsList"
-import { Basket } from "./Basket"
-import { BasketList } from "./BasketList"
-import { Alert } from "./Alert"
+import { useState, useEffect, useContext} from "react";
+import { ShopContext } from "../context";
+import { Pagination } from "react-bootstrap";
+import { API_KEY, API_URL } from "../config";
+import { Preloader } from "./Preloader";
+import { GoodsList } from "./GoodsList";
+import { Basket } from "./Basket";
+import { BasketList } from "./BasketList";
+import { Alert } from "./Alert";
 
 function Shop() {
-    const [goods, setGoods] = React.useState([]);
-    const [order, setOrder] = React.useState([]);
-    const [loading, setLoading] = React.useState(true);
-    const [currentPage, setCurrentPage] = React.useState(1);
-    const [isBasketShow, setBasketShow] = React.useState(false);
+    const { goods, loading, order, isBasketShow, alertName, setGoods } = useContext(ShopContext);
+
+    const [currentPage, setCurrentPage] = useState(1);
     const goodsPerPage = 8;
-    const [alertName, setAlertName] = React.useState('');
 
     //Get goods
-    React.useEffect(()=> {
+    useEffect(()=> {
         fetch(API_URL, {
             headers: {
                 'Authorization': API_KEY
             },
-        }).then(response => response.json()).then(data => {
-            if (data.shop) {
+        })
+            .then(response => response.json())
+            .then(data => {
                 const uniqueGoods = data.shop.filter((item, index, self) =>
                     index === self.findIndex(t => (
                         t.mainId === item.mainId
@@ -31,9 +30,8 @@ function Shop() {
                 );
                 const halfUniqueGoods = uniqueGoods.slice(0, Math.ceil(uniqueGoods.length / 2));
                 setGoods(halfUniqueGoods);
-            }
-            setLoading(false);
-        })
+            })
+    // eslint-disable-next-line react-hooks/exhaustive-deps
     }, []);
 
     const indexOfLastGood = currentPage * goodsPerPage;
@@ -45,63 +43,13 @@ function Shop() {
     const pageNumbers = [];
     for (let i = 1; i <= Math.ceil(goods.length / goodsPerPage); i++) {
         pageNumbers.push(i);
-    }
+    };
 
     const renderPageNumbers = pageNumbers.map(number => (
         <Pagination.Item key={number} active={number === currentPage} onClick={() => paginate(number)}>
             {number}
         </Pagination.Item>
     ));
-
-    const addToBasket = (item) => {
-        const itemIndex = order.findIndex(orderItem => orderItem.id === item.id);
-
-        if(itemIndex < 0) {
-            setOrder(prevOrder => [...prevOrder, { ...item, quantity: 1 }]);
-        }else {
-            const newOrder = order.map((orderItem, index) => 
-                index === itemIndex ? {...orderItem, quantity: orderItem.quantity + 1} : orderItem
-            );
-
-            setOrder(newOrder)
-        }
-        setAlertName(item.name);
-    };
-
-    const removeFromBasket = (itemId) => {
-        const newOrder = order.filter(el => el.id !== itemId);
-        setOrder(newOrder);
-    };
-
-    const handleBaskeetShow = () => {
-        setBasketShow(!isBasketShow);
-    };
-
-    const incQuantity = (itemId) => {
-        const newOrder = order.map((orderItem) => {
-          if (orderItem.id === itemId) {
-            return { ...orderItem, quantity: orderItem.quantity + 1 };
-          } else {
-            return orderItem;
-          }
-        });
-        setOrder(newOrder);
-    };
-
-    const decQuantity = (itemId) => {
-        const newOrder = order.map((orderItem) => {
-          if (orderItem.id === itemId && orderItem.quantity > 1) {
-            return { ...orderItem, quantity: orderItem.quantity - 1 };
-          } else {
-            return orderItem;
-          }
-        });
-        setOrder(newOrder);
-    };
-
-    const closeAlert = () => {
-        setAlertName('');
-    };
 
     return (
         <main className="content py-5 text-white">
@@ -110,19 +58,17 @@ function Shop() {
                     {
                         loading ? <Preloader/> : 
                         <>
-                            <GoodsList goods={currentGoods} addToBasket={addToBasket}/>
+                            <GoodsList goods={currentGoods} />
                             <Pagination>{renderPageNumbers}</Pagination>
                         </>
                     }
-                    { isBasketShow && <BasketList order={order} handleBaskeetShow={handleBaskeetShow} removeFromBasket={removeFromBasket} incQuantity={incQuantity} decQuantity={decQuantity}/> }
+                    { isBasketShow && <BasketList /> }
                 </div>
                 <div className="px-3">
-                    <Basket quantity={order.length} handleBaskeetShow={handleBaskeetShow} />
+                    <Basket quantity={order.length} />
                 </div>
             </div>
-            {
-                alertName && <Alert name={alertName} closeAlert={closeAlert}/>
-            }
+            { alertName && <Alert /> }
         </main>
     );
 }

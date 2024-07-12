@@ -1,12 +1,16 @@
+import { useContext} from "react";
+import { ShopContext } from "../context";
+
 function GoodsItem(props) {
     const { 
         mainId: id, 
-        displayName: name, 
-        // displayDescription: description, 
+        displayName: name,
         price, 
         displayAssets, 
-        addToBasket = Function.prototype 
     } = props;
+
+    const {addToBasket} = useContext(ShopContext);
+
 
     const url = displayAssets && displayAssets.length > 0 ? displayAssets[0].full_background : '';
     const finalPrice = price.finalPrice;
@@ -19,7 +23,7 @@ function GoodsItem(props) {
             
             }
             <div className="card-body">
-                <div className="d-flex align-items-center justify-content-between">
+                <div className="d-flex align-items-center justify-content-between flex-wrap gap-1">
                     <span className="d-inline-block fs-4">{finalPrice.toLocaleString()} ₽</span>
                     <button className="btn btn-outline-success rounded-0" onClick={() => addToBasket({id, name, finalPrice})}>Купить</button>
                 </div>

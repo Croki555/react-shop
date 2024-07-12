@@ -1,6 +1,10 @@
-function Basket(props) {
-    const { quantity = 0, handleBaskeetShow = Function.prototype } = props;
+import { useContext} from "react";
+import { ShopContext } from "../context";
 
+function Basket(props) {
+    const { order, handleBaskeetShow = Function.prototype } = useContext(ShopContext);
+    const quantity = order.length;
+    
     return (
         <div className="basket text-end" onClick={handleBaskeetShow}>
             <button className="btn btn-lg btn-success rounded-0 basket__btn position-relative">
